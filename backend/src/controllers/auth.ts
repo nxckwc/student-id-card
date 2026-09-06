@@ -134,7 +134,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   if (!secret) throw new Error('JWT_SECRET is not defined')
 
   const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, username: user.username, role: user.role, rememberMe: Boolean(rememberMe) },
     secret,
     { expiresIn: '1h' }
   )
@@ -155,12 +155,32 @@ export const session = async (req: Request, res: Response): Promise<void> => {
 
   try {
     const payload = jwt.verify(token, secret) as JwtPayload
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      select: { id: true, username: true, role: true },
+    })
+
+    if (!user) {
+      clearAuthCookie(res)
+      res.status(401).json({ message: 'Unauthorized' })
+      return
+    }
+
+    if (user.username !== payload.username || user.role !== payload.role) {
+      const refreshedToken = jwt.sign(
+        { id: user.id, username: user.username, role: user.role, rememberMe: payload.rememberMe !== false },
+        secret,
+        { expiresIn: '1h' },
+      )
+      setAuthCookie(res, refreshedToken, payload.rememberMe !== false)
+    }
+
     res.json({
       authenticated: true,
       user: {
-        id: payload.id,
-        username: payload.username,
-        role: payload.role
+        id: user.id,
+        username: user.username,
+        role: user.role
       }
     })
   } catch {

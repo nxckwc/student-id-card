@@ -48,17 +48,17 @@ const ActivityPage = () => {
         <>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-xs">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9aa89f]" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-faint" />
               <input
                 type="search"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder={t('searchActivity')}
                 aria-label={t('searchActivity')}
-                className="w-full rounded-lg border border-[#dce5de] bg-white/85 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#3f7565]"
+                className="w-full rounded-lg border border-border bg-surface/85 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent"
               />
             </div>
-            {total !== null && <p className="text-sm text-[#748078]">{t('activityCount', { count: total })}</p>}
+            {total !== null && <p className="text-sm text-text-muted">{t('activityCount', { count: total })}</p>}
           </div>
 
           {activityQuery.isLoading ? (
@@ -73,21 +73,21 @@ const ActivityPage = () => {
             <EmptyState message={search ? t('noActivityFound') : t('noActivity')} />
           ) : (
             <>
-              <div className="overflow-hidden rounded-lg border border-[#dce5de] bg-white/85">
+              <div className="overflow-hidden rounded-lg border border-border bg-surface/85">
                 {logs.map((log) => (
-                  <div key={log.id} className="flex items-center gap-4 border-b border-[#e8eee9] p-4 last:border-0">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#deece4] text-sm font-bold text-[#356b5c]">
+                  <div key={log.id} className="flex items-center gap-4 border-b border-border-soft p-4 last:border-0">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-sm font-bold text-accent-foreground">
                       {log.student.firstName.charAt(0).toUpperCase()}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-bold">{log.student.firstName} {log.student.lastName}</span>
-                      <span className="flex items-center gap-1 text-xs text-[#748078]">
+                      <span className="flex items-center gap-1 text-xs text-text-muted">
                         <Activity className="size-3" />
                         {log.type} · {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestamp))}
                         {log.context ? ` · ${log.context.subject} · ${log.context.roomId} · P${log.context.period}` : ''}
                       </span>
                     </span>
-                    <span className="rounded-md bg-[#edf3ef] px-2 py-1 text-xs font-bold text-[#52675c]">{log.status || '—'}</span>
+                    <span className="rounded-md bg-surface-chip px-2 py-1 text-xs font-bold text-text-secondary">{log.status || '—'}</span>
                   </div>
                 ))}
               </div>
@@ -96,7 +96,7 @@ const ActivityPage = () => {
                   <button
                     type="button"
                     onClick={() => setLimit((current) => current + pageSize)}
-                    className="inline-flex items-center gap-2 rounded-md border border-[#dce5de] bg-white/85 px-4 py-2 text-sm font-bold text-[#527263] transition hover:bg-white"
+                    className="inline-flex items-center gap-2 rounded-md border border-border bg-surface/85 px-4 py-2 text-sm font-bold text-text-secondary transition hover:bg-surface"
                   >
                     <ChevronDown className="size-4" />
                     {t('loadMore')}

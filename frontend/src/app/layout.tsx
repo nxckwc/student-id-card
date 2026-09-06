@@ -17,6 +17,16 @@ export const metadata: Metadata = {
   description: "Student Card system",
 };
 
+const themeScript = `
+  (() => {
+    const storedTheme = localStorage.getItem('theme');
+    const theme = storedTheme === 'dark' || storedTheme === 'light'
+      ? storedTheme
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  })();
+`;
+
 export default async function RootLayout({
   children,
 }: {
@@ -28,6 +38,9 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

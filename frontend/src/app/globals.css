@@ -5,19 +5,136 @@
   --foreground: #26332e;
   --surface: #ffffff;
   --surface-muted: #e9eeea;
+  --surface-subtle: #f1f6f2;
+  --surface-hover: #edf2ee;
+  --surface-active: #e7f0eb;
+  --surface-input: #f8fbf8;
+  --surface-chip: #edf3ef;
+  --surface-row: #f5f9f6;
+  --surface-soft: #eef7f2;
   --border: #dce5de;
+  --border-soft: #e8eee9;
+  --border-strong: #b9cbc0;
+  --border-dashed: #c8d5cc;
+  --text-primary: #26332e;
+  --text-secondary: #527263;
+  --text-muted: #748078;
+  --text-faint: #9aa89f;
+  --text-nav: #68756d;
   --accent: #3f7565;
-  --accent-dark: #2f5d50;
+  --accent-hover: #315f51;
+  --accent-foreground: #356b5c;
   --accent-soft: #deece4;
-  --sage: #deece4;
-  --sage-foreground: #356b5c;
-  --sky: #e0ecf3;
-  --sky-foreground: #426778;
+  --accent-border: #8db7a2;
+  --accent-border-hover: #5f927e;
+  --danger: #d8675c;
+  --danger-hover: #b85349;
+  --danger-foreground: #99483f;
+  --danger-soft: #f9e8e4;
+  --danger-border: #e8bcb6;
+  --danger-bg: #fff8f6;
+  --danger-accent: #e47769;
+  --danger-accent-soft: #d05f54;
+  --warning: #d2a63b;
+  --warning-foreground: #e0c060;
+  --warning-soft: #f4edcf;
+  --info: #426778;
+  --info-soft: #e0ecf3;
+  --neutral: #bcc8c0;
+  --skeleton: #dfe7e1;
+  --scrollbar: #a9bdb1;
+  --grid-line: #e9e3dd;
+}
+
+.dark {
+  --background: #0e1512;
+  --foreground: #e6ede8;
+  --surface: #16201b;
+  --surface-muted: #1e2a24;
+  --surface-subtle: #1a251f;
+  --surface-hover: #22302a;
+  --surface-active: #24382f;
+  --surface-input: #131c17;
+  --surface-chip: #1e2a24;
+  --surface-row: #18221d;
+  --surface-soft: #1a2a22;
+  --border: #26332c;
+  --border-soft: #1f2a24;
+  --border-strong: #3a4a41;
+  --border-dashed: #33413a;
+  --text-primary: #e6ede8;
+  --text-secondary: #a9bdb1;
+  --text-muted: #8a9a90;
+  --text-faint: #64756b;
+  --text-nav: #9fb0a6;
+  --accent: #4f9a83;
+  --accent-hover: #5cab92;
+  --accent-foreground: #8fd0b8;
+  --accent-soft: #1c332a;
+  --accent-border: #2f5d50;
+  --accent-border-hover: #3f7565;
+  --danger: #e07a6e;
+  --danger-hover: #c9655a;
+  --danger-foreground: #f0a49b;
+  --danger-soft: #3a2320;
+  --danger-border: #5a3530;
+  --danger-bg: #2a1c1a;
+  --danger-accent: #e47769;
+  --danger-accent-soft: #e08a80;
+  --warning: #d2a63b;
+  --warning-foreground: #e0c060;
+  --warning-soft: #33290f;
+  --info: #7fb0c9;
+  --info-soft: #16282f;
+  --neutral: #3a4a41;
+  --skeleton: #22302a;
+  --scrollbar: #3a4a41;
+  --grid-line: #26332c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+  --color-surface-input: var(--surface-input);
+  --color-surface-chip: var(--surface-chip);
+  --color-surface-row: var(--surface-row);
+  --color-surface-soft: var(--surface-soft);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-border-strong: var(--border-strong);
+  --color-border-dashed: var(--border-dashed);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-nav: var(--text-nav);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
+  --color-accent-border-hover: var(--accent-border-hover);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-accent: var(--danger-accent);
+  --color-danger-accent-soft: var(--danger-accent-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-neutral: var(--neutral);
+  --color-skeleton: var(--skeleton);
+  --color-scrollbar: var(--scrollbar);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -49,10 +166,15 @@ input:focus-visible {
 
 .skeleton {
   animation: skeleton-pulse 1.6s ease-in-out infinite;
-  background: #dfe7e1;
+  background: var(--skeleton);
 }
 
 .schedule-rail {
-  scrollbar-color: #a9bdb1 transparent;
+  scrollbar-color: var(--scrollbar) transparent;
   scrollbar-width: thin;
+}
+
+.login-grid {
+  background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
 }

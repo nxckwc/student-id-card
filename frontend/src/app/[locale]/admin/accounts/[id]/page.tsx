@@ -75,9 +75,9 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!Number.isInteger(accountId)) {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-lg border border-[#e8bcb6] bg-[#fff8f6] p-6">
-        <p className="flex items-center gap-2 text-sm font-medium text-[#99483f]"><AlertCircle className="size-5" />{t('invalidId')}</p>
-        <Link href={`/${locale}/admin/accounts`} className="text-sm font-bold text-[#3f7565] underline underline-offset-4">{t('backToAccounts')}</Link>
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-danger-border bg-danger-bg p-6">
+        <p className="flex items-center gap-2 text-sm font-medium text-danger-foreground"><AlertCircle className="size-5" />{t('invalidId')}</p>
+        <Link href={`/${locale}/admin/accounts`} className="text-sm font-bold text-accent underline underline-offset-4">{t('backToAccounts')}</Link>
       </div>
     )
   }
@@ -90,7 +90,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <>
-      <Link href={`/${locale}/admin/accounts`} className="mb-6 flex items-center gap-2 text-sm font-semibold text-[#527263] hover:text-[#26332e]">
+      <Link href={`/${locale}/admin/accounts`} className="mb-6 flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-text-primary">
         <ArrowLeft className="size-4" />
         {t('backToAccounts')}
       </Link>
@@ -102,9 +102,9 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
       ) : accountQuery.isError ? (
         notFound ? (
-          <div className="flex flex-col items-start gap-3 rounded-lg border border-[#e8bcb6] bg-[#fff8f6] p-6">
-            <p className="flex items-center gap-2 text-sm font-medium text-[#99483f]"><AlertCircle className="size-5" />{t('accountNotFound')}</p>
-            <Link href={`/${locale}/admin/accounts`} className="text-sm font-bold text-[#3f7565] underline underline-offset-4">{t('backToAccounts')}</Link>
+          <div className="flex flex-col items-start gap-3 rounded-lg border border-danger-border bg-danger-bg p-6">
+            <p className="flex items-center gap-2 text-sm font-medium text-danger-foreground"><AlertCircle className="size-5" />{t('accountNotFound')}</p>
+            <Link href={`/${locale}/admin/accounts`} className="text-sm font-bold text-accent underline underline-offset-4">{t('backToAccounts')}</Link>
           </div>
         ) : (
           <ErrorState message="" onRetry={() => void accountQuery.refetch()} />
@@ -113,14 +113,14 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         <EmptyState message={t('accountNotFound')} />
       ) : (
         <>
-          <section className="mb-8 flex flex-col gap-2 border-b border-[#dce5de] pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <section className="mb-8 flex flex-col gap-2 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-[#527263]">{t('accountDetails')}</p>
+              <p className="mb-2 text-xs font-semibold uppercase text-text-secondary">{t('accountDetails')}</p>
               <h1 className="flex items-center gap-3 text-3xl font-bold">
                 {account.username}
                 <RoleBadge role={account.role} />
               </h1>
-              <p className="mt-2 text-sm text-[#748078]">
+              <p className="mt-2 text-sm text-text-muted">
                 {t('memberSince', { date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(account.createdAt)) })} · {t('accountId')} {account.id}
               </p>
             </div>
@@ -128,7 +128,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
               type="button"
               onClick={handleSave}
               disabled={saveMutation.isPending || !isDirty}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#3f7565] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#315f51] disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-white transition hover:bg-accent-hover disabled:opacity-60"
             >
               {saveMutation.isPending ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
               {saveMutation.isPending ? t('saving') : t('save')}
@@ -136,25 +136,25 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </section>
 
           {saveMutation.isSuccess && (
-            <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#356b5c]" role="status">
+            <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-accent-foreground" role="status">
               <Check className="size-4" />
               {t('saved')}
             </p>
           )}
           {errorMessage && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-[#e8bcb6] bg-[#fff8f6] px-4 py-3 text-sm font-medium text-[#99483f]" role="alert">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger-border bg-danger-bg px-4 py-3 text-sm font-medium text-danger-foreground" role="alert">
               <AlertCircle className="size-4 shrink-0" />
               {errorMessage}
             </div>
           )}
 
-          <section className="rounded-lg border border-[#dce5de] bg-white/85 p-4 sm:p-6">
+          <section className="rounded-lg border border-border bg-surface/85 p-4 sm:p-6">
             <div className="mb-5 flex items-center gap-2">
-              <CalendarDays className="size-5 text-[#527263]" />
+              <CalendarDays className="size-5 text-text-secondary" />
               <h2 className="text-lg font-bold">{t('assignSchedule')}</h2>
             </div>
 
-            <div className="mb-6 grid grid-cols-7 gap-1 rounded-md bg-[#edf3ef] p-1" role="tablist" aria-label={t('selectDay')}>
+            <div className="mb-6 grid grid-cols-7 gap-1 rounded-md bg-surface-chip p-1" role="tablist" aria-label={t('selectDay')}>
               {days.map((day) => (
                 <button
                   key={day}
@@ -162,7 +162,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   role="tab"
                   aria-selected={selectedDay === day}
                   onClick={() => setSelectedDay(day)}
-                  className={`rounded px-1 py-2 text-xs font-bold transition sm:px-3 sm:text-sm ${selectedDay === day ? 'bg-[#3f7565] text-white' : 'text-[#69766e] hover:bg-white'}`}
+                  className={`rounded px-1 py-2 text-xs font-bold transition sm:px-3 sm:text-sm ${selectedDay === day ? 'bg-accent text-white' : 'text-text-nav hover:bg-surface'}`}
                 >
                   {t(`days.${day}`)}
                 </button>
@@ -175,10 +175,10 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 const saved = account.scheduleEntries.find((item) => item.period === period)
                 const [start, end] = saved?.startTime ? [saved.startTime, saved.endTime] : periodTimes[period]
                 return (
-                  <div key={period} className="grid gap-2 rounded-md border border-[#e5ece7] p-3 sm:grid-cols-[8rem_1fr_1fr_1fr] sm:items-center">
+                  <div key={period} className="grid gap-2 rounded-md border border-border-soft p-3 sm:grid-cols-[8rem_1fr_1fr_1fr] sm:items-center">
                     <div>
                       <p className="text-sm font-bold">{t('period')} {period}</p>
-                      <p className="text-xs text-[#748078]">{start} - {end}</p>
+                      <p className="text-xs text-text-muted">{start} - {end}</p>
                     </div>
                     <input
                       type="text"
@@ -186,7 +186,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       onChange={(event) => updateDraft(period, 'subject', event.target.value)}
                       placeholder={t('subject')}
                       aria-label={`${t('subject')} — ${t('period')} ${period}`}
-                      className="rounded border border-[#dce5de] px-3 py-2 text-sm outline-none focus:border-[#3f7565]"
+                      className="rounded border border-border px-3 py-2 text-sm outline-none focus:border-accent"
                     />
                     <input
                       type="text"
@@ -194,7 +194,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       onChange={(event) => updateDraft(period, 'className', event.target.value)}
                       placeholder={t('className')}
                       aria-label={`${t('className')} — ${t('period')} ${period}`}
-                      className="rounded border border-[#dce5de] px-3 py-2 text-sm outline-none focus:border-[#3f7565]"
+                      className="rounded border border-border px-3 py-2 text-sm outline-none focus:border-accent"
                     />
                     <input
                       type="text"
@@ -202,7 +202,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       onChange={(event) => updateDraft(period, 'roomId', event.target.value)}
                       placeholder={t('room')}
                       aria-label={`${t('room')} — ${t('period')} ${period}`}
-                      className="rounded border border-[#dce5de] px-3 py-2 text-sm outline-none focus:border-[#3f7565]"
+                      className="rounded border border-border px-3 py-2 text-sm outline-none focus:border-accent"
                     />
                   </div>
                 )
@@ -210,7 +210,7 @@ const AccountDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
 
             {incompleteCount > 0 && (
-              <p className="mt-4 flex items-center gap-2 text-sm font-medium text-[#7a682d]">
+              <p className="mt-4 flex items-center gap-2 text-sm font-medium text-warning-foreground">
                 <AlertCircle className="size-4 shrink-0" />
                 {t('incompleteRows', { count: incompleteCount })}
               </p>

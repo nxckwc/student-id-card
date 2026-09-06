@@ -41,7 +41,7 @@ const AccountsPage = () => {
   }
 
   const roleMutation = useMutation({
-    mutationFn: ({ id, role }: { id: number; role: 'USER' | 'ADMIN' }) => changeAccountRole(id, role),
+    mutationFn: ({ id, role }: { id: number; role: 'USER' | 'TEACHER' | 'ADMIN' }) => changeAccountRole(id, role),
     onSuccess: (_account, { id }) => {
       const target = accountsQuery.data?.find((account) => account.id === id)
       setConfirm(null)
@@ -68,12 +68,18 @@ const AccountsPage = () => {
     },
   })
 
+  const nextRole = (role: string): 'USER' | 'TEACHER' | 'ADMIN' => {
+    if (role === 'USER') return 'TEACHER'
+    if (role === 'TEACHER') return 'ADMIN'
+    return 'USER'
+  }
+
   const toggleRole = (account: Account) => {
     if (account.role === 'ADMIN') {
       setConfirm({ type: 'demote', account })
       return
     }
-    roleMutation.mutate({ id: account.id, role: 'ADMIN' })
+    roleMutation.mutate({ id: account.id, role: nextRole(account.role) })
   }
 
   const accounts = accountsQuery.data ?? []
@@ -89,7 +95,7 @@ const AccountsPage = () => {
       {feedback && (
         <div
           className={`mb-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold ${
-            feedback.kind === 'error' ? 'border-[#e8bcb6] bg-[#fff8f6] text-[#99483f]' : 'border-[#b9d4c6] bg-[#eef7f2] text-[#356b5c]'
+            feedback.kind === 'error' ? 'border-danger-border bg-danger-bg text-danger-foreground' : 'border-accent-border bg-surface-soft text-accent-foreground'
           }`}
           role="status"
         >
@@ -100,17 +106,17 @@ const AccountsPage = () => {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9aa89f]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-faint" />
           <input
             type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder={t('searchAccounts')}
             aria-label={t('searchAccounts')}
-            className="w-full rounded-lg border border-[#dce5de] bg-white/85 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#3f7565]"
+            className="w-full rounded-lg border border-border bg-surface/85 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent"
           />
         </div>
-        <p className="text-sm text-[#748078]">{t('accountCount', { count: accounts.length })}</p>
+        <p className="text-sm text-text-muted">{t('accountCount', { count: accounts.length })}</p>
       </div>
 
       {accountsQuery.isLoading ? (
@@ -122,10 +128,10 @@ const AccountsPage = () => {
       ) : accounts.length === 0 ? (
         <EmptyState message={search ? t('noAccountsFound') : t('noAccounts')} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-[#dce5de] bg-white/85">
+        <div className="overflow-x-auto rounded-lg border border-border bg-surface/85">
           <table className="w-full min-w-[40rem] text-left text-sm">
             <thead>
-              <tr className="border-b border-[#e8eee9] text-xs uppercase text-[#9aa89f]">
+              <tr className="border-b border-border-soft text-xs uppercase text-text-faint">
                 <th scope="col" className="px-4 py-3 font-bold">{t('account')}</th>
                 <th scope="col" className="px-4 py-3 font-bold">{t('role')}</th>
                 <th scope="col" className="px-4 py-3 font-bold">{t('scheduleCoverage')}</th>
@@ -139,21 +145,21 @@ const AccountsPage = () => {
                 const isLastAdmin = account.role === 'ADMIN' && accounts.filter((item) => item.role === 'ADMIN').length <= 1
                 const actionsDisabled = isSelf || isLastAdmin
                 return (
-                  <tr key={account.id} className="border-b border-[#e8eee9] last:border-0 hover:bg-[#f5f9f6]">
+                  <tr key={account.id} className="border-b border-border-soft last:border-0 hover:bg-surface-row">
                     <td className="px-4 py-3">
-                      <Link href={`/${locale}/admin/accounts/${account.id}`} className="flex items-center gap-3 font-bold text-[#26332e] hover:text-[#356b5c]">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#deece4] text-[#356b5c]">
+                      <Link href={`/${locale}/admin/accounts/${account.id}`} className="flex items-center gap-3 font-bold text-text-primary hover:text-accent-foreground">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-foreground">
                           <Users className="size-4" />
                         </span>
                         <span className="flex items-center gap-2">
                           {account.username}
-                          {isSelf && <span className="rounded bg-[#eef1ef] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#748078]">{t('you')}</span>}
+                          {isSelf && <span className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] font-bold uppercase text-text-muted">{t('you')}</span>}
                         </span>
                       </Link>
                     </td>
                     <td className="px-4 py-3"><RoleBadge role={account.role} /></td>
-                    <td className="px-4 py-3 tabular-nums text-[#69766e]">{account._count?.scheduleEntries ?? 0} {t('periods')}</td>
-                    <td className="px-4 py-3 text-[#69766e]">
+                    <td className="px-4 py-3 tabular-nums text-text-nav">{account._count?.scheduleEntries ?? 0} {t('periods')}</td>
+                    <td className="px-4 py-3 text-text-nav">
                       {new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(account.createdAt))}
                     </td>
                     <td className="px-4 py-3">
@@ -162,7 +168,7 @@ const AccountsPage = () => {
                           href={`/${locale}/admin/accounts/${account.id}`}
                           title={t('manageSchedules')}
                           aria-label={`${t('manageSchedules')} ${account.username}`}
-                          className="rounded-md p-2 text-[#527263] transition hover:bg-[#e7f0eb] hover:text-[#356b5c]"
+                          className="rounded-md p-2 text-text-secondary transition hover:bg-surface-active hover:text-accent-foreground"
                         >
                           <CalendarDays className="size-4" />
                         </Link>
@@ -170,9 +176,9 @@ const AccountsPage = () => {
                           type="button"
                           onClick={() => toggleRole(account)}
                           disabled={actionsDisabled}
-                          title={actionsDisabled ? t('roleLocked') : t(account.role === 'ADMIN' ? 'demote' : 'promote')}
-                          aria-label={`${t(account.role === 'ADMIN' ? 'demote' : 'promote')} ${account.username}`}
-                          className="rounded-md p-2 text-[#527263] transition hover:bg-[#e7f0eb] hover:text-[#356b5c] disabled:cursor-not-allowed disabled:opacity-40"
+                          title={actionsDisabled ? t('roleLocked') : t(`roleNames.${nextRole(account.role)}`)}
+                          aria-label={`${t(`roleNames.${nextRole(account.role)}`)} ${account.username}`}
+                          className="rounded-md p-2 text-text-secondary transition hover:bg-surface-active hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {account.role === 'ADMIN' ? <UserMinus className="size-4" /> : <UserPlus className="size-4" />}
                         </button>
@@ -182,7 +188,7 @@ const AccountsPage = () => {
                           disabled={actionsDisabled}
                           title={actionsDisabled ? t('deleteLocked') : t('deleteAccount')}
                           aria-label={`${t('deleteAccount')} ${account.username}`}
-                          className="rounded-md p-2 text-[#99483f] transition hover:bg-[#f9e8e4] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md p-2 text-danger-foreground transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Trash2 className="size-4" />
                         </button>

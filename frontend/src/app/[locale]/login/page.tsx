@@ -3,13 +3,13 @@ import LoginCard from "./components/LoginCard";
 
 const Background = () => (
   <div className="pointer-events-none absolute inset-0">
-    <div className="absolute inset-0 opacity-70 bg-[linear-gradient(to_right,#e9e3dd_1px,transparent_1px),linear-gradient(to_bottom,#e9e3dd_1px,transparent_1px)] bg-size-[56px_56px]" />
+    <div className="login-grid absolute inset-0 opacity-70" />
   </div>
 );
 
 export default function LoginPage() {
   return (
-    <main className="relative flex h-screen flex-1 overflow-hidden bg-[#f8f6f3] px-4 pb-4 pt-20 text-[#303536] sm:px-6">
+    <main className="relative flex h-screen flex-1 overflow-hidden bg-background px-4 pb-4 pt-20 text-text-primary sm:px-6">
       <Background />
       <div className="relative mx-auto flex w-full max-w-6xl items-center">
         <div className="grid w-full items-center gap-12 lg:grid-cols-[1fr_28rem] lg:gap-20">

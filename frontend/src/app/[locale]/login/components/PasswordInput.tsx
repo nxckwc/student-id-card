@@ -23,7 +23,7 @@ const PasswordInput = ({
     <div className="relative">
       <input
         autoComplete="current-password"
-        className="w-full rounded-xl border border-[#ded6d0] bg-white px-4 py-3 pr-12 text-sm text-[#303536] outline-none transition placeholder:text-[#aaa19b] focus:border-[#c94f5f] focus:ring-3 focus:ring-[#f8e7e9]"
+        className="w-full rounded-xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text-primary outline-none transition placeholder:text-text-faint focus:border-danger focus:ring-3 focus:ring-danger-soft"
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -33,7 +33,7 @@ const PasswordInput = ({
       />
       <button
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg px-3 py-2 text-[#817873] hover:bg-[#f1eeea]"
+        className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg px-3 py-2 text-text-faint hover:bg-surface-hover"
         disabled={disabled}
         onClick={onToggle}
         type="button"

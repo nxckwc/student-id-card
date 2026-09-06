@@ -2,9 +2,9 @@ const Block = ({ className }: { className: string }) => <div className={`skeleto
 
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-[#f8f6f3] px-4 pb-12 pt-22 sm:px-6 lg:px-8" aria-label="Loading page" aria-busy="true">
+    <main className="min-h-screen bg-background px-4 pb-12 pt-22 sm:px-6 lg:px-8" aria-label="Loading page" aria-busy="true">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-7 flex items-center gap-3 border-b border-[#e6dfda] pb-7">
+        <div className="mb-7 flex items-center gap-3 border-b border-border pb-7">
           <Block className="size-12" />
           <div className="space-y-2"><Block className="h-3 w-28" /><Block className="h-6 w-56" /></div>
         </div>
