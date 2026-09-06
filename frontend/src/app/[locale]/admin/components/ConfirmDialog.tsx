@@ -1,6 +1,7 @@
 "use client"
 
 import { AlertTriangle } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 
 export const ConfirmDialog = ({
   open,
@@ -21,12 +22,28 @@ export const ConfirmDialog = ({
   onConfirm: () => void
   onCancel: () => void
 }) => {
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-[#26332e]/40 backdrop-blur-sm" onClick={busy ? undefined : onCancel} />
-      <div className="relative w-full max-w-md rounded-lg border border-[#dce5de] bg-white p-6 shadow-[0_20px_50px_rgba(38,51,46,0.25)]">
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="confirm-dialog"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <div className="absolute inset-0 bg-[#26332e]/40 backdrop-blur-sm" onClick={busy ? undefined : onCancel} />
+          <motion.div
+            className="relative w-full max-w-md rounded-lg border border-[#dce5de] bg-white p-6 shadow-[0_20px_50px_rgba(38,51,46,0.25)]"
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
         <div className="flex items-start gap-4">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#f9e8e4] text-[#a95047]">
             <AlertTriangle className="size-5" />
@@ -54,7 +71,9 @@ export const ConfirmDialog = ({
             {busy ? '…' : confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

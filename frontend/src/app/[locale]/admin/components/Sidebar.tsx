@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { Activity, CalendarDays, GraduationCap, LayoutDashboard, ShieldCheck, Users } from 'lucide-react'
+import { Activity, CalendarDays, FlaskConical, GraduationCap, LayoutDashboard, Nfc, Settings, Users } from 'lucide-react'
 
 interface NavItem {
   href: string
@@ -41,6 +41,24 @@ const AdminNav = ({ variant, username }: { variant: 'sidebar' | 'mobile'; userna
       label: t('logs'),
       icon: <Activity className="size-4" />,
       isActive: (path) => path.startsWith(`/${locale}/admin/activity`),
+    },
+    {
+      href: `/${locale}/admin/reader`,
+      label: 'Reader',
+      icon: <Nfc className="size-4" />,
+      isActive: (path) => path.startsWith(`/${locale}/admin/reader`),
+    },
+    {
+      href: `/${locale}/admin/test`,
+      label: 'API Test',
+      icon: <FlaskConical className="size-4" />,
+      isActive: (path) => path.startsWith(`/${locale}/admin/test`),
+    },
+    {
+      href: `/${locale}/admin/settings`,
+      label: 'Settings',
+      icon: <Settings className="size-4" />,
+      isActive: (path) => path.startsWith(`/${locale}/admin/settings`),
     },
   ]
 

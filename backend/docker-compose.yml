@@ -28,6 +28,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-student_id_db}?schema=public
       JWT_SECRET: ${JWT_SECRET:-default_jwt_secret_for_local_smoke_test}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      READER_DEVICE_SECRET: ${READER_DEVICE_SECRET:-default_reader_secret_for_local_smoke_test}
       PORT: 3100
     depends_on:
       db:

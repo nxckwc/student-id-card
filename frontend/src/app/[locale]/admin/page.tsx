@@ -88,6 +88,7 @@ const OverviewPage = () => {
       </section>
 
       <section className="mt-6" aria-label={t('latestLog')}>
+        <p className="mb-1 text-xs font-bold uppercase text-[#527263]">{t('recentLogs')}</p>
         <div className="flex items-center gap-3 rounded-lg border border-[#dce5de] bg-white/85 px-4 py-3">
           <span className="relative flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#deece4] text-[#356b5c]">
             <Activity className="size-4" />
