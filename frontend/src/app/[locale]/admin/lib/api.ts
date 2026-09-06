@@ -37,18 +37,67 @@ export interface AdminOverview {
 
 export interface Student {
   id: string
+  studentId: string | null
   firstName: string
   lastName: string
-  uid_card: string
+  uid_card: string | null
   createdAt: string
-  _count: { logs: number }
+  _count: { gateLogs: number; roomLogs: number }
 }
 
 export interface AttendanceLog {
   id: string
   timestamp: string
   status: string
+  type: 'GATE' | 'ROOM'
+  context: { subject: string; className: string; roomId: string; period: number } | null
   student: { id: string; firstName: string; lastName: string }
+}
+
+export interface Reader {
+  id: string
+  name: string
+  type: 'GATE' | 'ROOM'
+  active: boolean
+  createdAt?: string
+  updatedAt?: string
+  deviceToken?: string
+  teachers: { user: { id: number; username: string } }[]
+}
+
+export interface ReaderScanResult {
+  reader: { id: string; name: string; type: 'GATE' | 'ROOM' }
+  student: ReaderStudent
+  action: 'IN' | 'OUT' | 'PRESENT'
+  created: boolean
+  gate: { state: string; inStatus: string; inAt: string; outAt: string | null } | null
+  room: { roomId: string; subject: string; className: string; period: number; presentAt: string } | null
+  dryRun: boolean
+  elapsedMs: number
+}
+
+export interface ReaderStudent {
+  id: string
+  studentId: string | null
+  firstName: string
+  lastName: string
+  uid_card: string | null
+}
+
+export interface ReaderLookupResult {
+  found: boolean
+  student: ReaderStudent | null
+}
+
+export interface RegisterCardResult {
+  success: boolean
+  student: ReaderStudent
+}
+
+export interface SchoolSettings {
+  id: number
+  lateCutoff: string
+  timezone: string
 }
 
 export interface SessionUser {
@@ -101,8 +150,8 @@ export const fetchStudents = async (search: string): Promise<{ students: Student
   return data
 }
 
-export const createStudent = async (firstName: string, lastName: string): Promise<Student> => {
-  const { data } = await axios.post<Student>(`${API_BASE_URL}/student`, { firstName, lastName }, { withCredentials: true })
+export const createStudent = async (firstName: string, lastName: string, studentId: string): Promise<Student> => {
+  const { data } = await axios.post<Student>(`${API_BASE_URL}/student`, { firstName, lastName, studentId }, { withCredentials: true })
   return data
 }
 
@@ -114,6 +163,59 @@ export const fetchAttendance = async (
   const { data } = await axios.get<{ logs: AttendanceLog[] | null; total: number | null; studentDataAvailable: boolean }>(
     `${API_BASE_URL}/admin/attendance`,
     { withCredentials: true, params: { offset, limit, ...(search ? { search } : {}) } },
+  )
+  return data
+}
+
+export const simulateReaderScan = async (
+  cardUid: string,
+  options: { readerId: string; dryRun?: boolean },
+): Promise<ReaderScanResult> => {
+  const { data } = await axios.post<ReaderScanResult>(
+    `${API_BASE_URL}/admin/reader/scan`,
+    { cardUid, ...options },
+    { withCredentials: true },
+  )
+  return data
+}
+
+export const fetchReaders = async (): Promise<Reader[]> => {
+  const { data } = await axios.get<{ readers: Reader[] }>(`${API_BASE_URL}/admin/readers`, { withCredentials: true })
+  return data.readers
+}
+
+export const createReader = async (name: string, type: 'GATE' | 'ROOM'): Promise<Reader> => {
+  const { data } = await axios.post<{ reader: Reader }>(`${API_BASE_URL}/admin/readers`, { name, type }, { withCredentials: true })
+  return data.reader
+}
+
+export const updateReader = async (id: string, payload: { name?: string; active?: boolean; teacherIds?: number[] }): Promise<void> => {
+  await axios.patch(`${API_BASE_URL}/admin/readers/${id}`, payload, { withCredentials: true })
+}
+
+export const fetchSchoolSettings = async (): Promise<SchoolSettings> => {
+  const { data } = await axios.get<{ settings: SchoolSettings }>(`${API_BASE_URL}/admin/settings`, { withCredentials: true })
+  return data.settings
+}
+
+export const saveSchoolSettings = async (lateCutoff: string, timezone: string): Promise<SchoolSettings> => {
+  const { data } = await axios.put<{ settings: SchoolSettings }>(`${API_BASE_URL}/admin/settings`, { lateCutoff, timezone }, { withCredentials: true })
+  return data.settings
+}
+
+export const lookupReaderCard = async (cardUid: string): Promise<ReaderLookupResult> => {
+  const { data } = await axios.get<ReaderLookupResult>(`${API_BASE_URL}/admin/reader/lookup`, {
+    withCredentials: true,
+    params: { cardUid },
+  })
+  return data
+}
+
+export const registerReaderCard = async (studentId: string, cardUid: string, deviceToken: string): Promise<RegisterCardResult> => {
+  const { data } = await axios.post<RegisterCardResult>(
+    `${API_BASE_URL}/card/register`,
+    { studentId, cardUid },
+    { withCredentials: true, headers: { 'X-Device-Token': deviceToken } },
   )
   return data
 }

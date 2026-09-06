@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
@@ -62,16 +63,18 @@ export const getAdminOverview = async (req: Request, res: Response): Promise<voi
   try {
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
-    const [students, attendance, scannedStudents] = await prisma.$transaction([
+    const [students, gateAttendance, roomAttendance, gateStudents] = await prisma.$transaction([
       prisma.student.count(),
-      prisma.attendanceLog.count(),
-      prisma.attendanceLog.findMany({
-        where: { timestamp: { gte: startOfDay } },
+      prisma.gateLog.count(),
+      prisma.roomLog.count(),
+      prisma.gateLog.findMany({
+        where: { date: { gte: startOfDay } },
         distinct: ['studentId'],
         select: { studentId: true },
       }),
     ])
-    res.json({ overview: { accounts, students, attendance, scannedStudents: scannedStudents.length, scheduledAccounts, studentDataAvailable: true } })
+    const attendance = gateAttendance + roomAttendance
+    res.json({ overview: { accounts, students, attendance, scannedStudents: gateStudents.length, scheduledAccounts, studentDataAvailable: true } })
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
       res.json({ overview: { accounts, students: null, attendance: null, scheduledAccounts, studentDataAvailable: false } })
@@ -274,6 +277,29 @@ export const replaceAccountSchedule = async (req: Request, res: Response): Promi
     scheduleData.push({ userId: accountId, weekday, period, subject, className, roomId, ...getPeriodTime(period) })
   }
 
+  const roomAssignments = await prisma.readerTeacher.findMany({
+    where: { userId: accountId, reader: { type: 'ROOM', active: true } },
+    select: { readerId: true },
+  })
+  if (roomAssignments.length > 0) {
+    const readerIds = roomAssignments.map((assignment) => assignment.readerId)
+    const assignedTeachers = await prisma.readerTeacher.findMany({
+      where: { readerId: { in: readerIds }, userId: { not: accountId } },
+      select: { userId: true, readerId: true },
+    })
+    const conflicts = await prisma.scheduleEntry.findMany({
+      where: {
+        userId: { in: assignedTeachers.map((assignment) => assignment.userId) },
+        OR: scheduleData.map((entry) => ({ weekday: entry.weekday, period: entry.period })),
+      },
+      select: { userId: true, weekday: true, period: true },
+    })
+    if (conflicts.length > 0) {
+      res.status(409).json({ message: 'This schedule overlaps another teacher assigned to the same room reader' })
+      return
+    }
+  }
+
   await prisma.$transaction([
     prisma.scheduleEntry.deleteMany({ where: { userId: accountId } }),
     prisma.scheduleEntry.createMany({ data: scheduleData }),
@@ -438,6 +464,7 @@ export const getStudents = async (req: Request, res: Response): Promise<void> =>
             OR: [
               { firstName: { contains: search, mode: 'insensitive' } },
               { lastName: { contains: search, mode: 'insensitive' } },
+              { studentId: { contains: search, mode: 'insensitive' } },
               { uid_card: { contains: search, mode: 'insensitive' } },
             ],
           }
@@ -445,11 +472,12 @@ export const getStudents = async (req: Request, res: Response): Promise<void> =>
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        studentId: true,
         firstName: true,
         lastName: true,
         uid_card: true,
         createdAt: true,
-        _count: { select: { logs: true } },
+        _count: { select: { gateLogs: true, roomLogs: true } },
       },
     })
 
@@ -501,40 +529,148 @@ export const getAttendance = async (req: Request, res: Response): Promise<void> 
   const offset = Number.isInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0
   const search = typeof req.query['search'] === 'string' ? req.query['search'].trim() : ''
 
-  const where: Prisma.AttendanceLogWhereInput | undefined = search
-    ? {
-        student: {
-          OR: [
-            { firstName: { contains: search, mode: 'insensitive' } },
-            { lastName: { contains: search, mode: 'insensitive' } },
-          ],
-        },
-      }
-    : undefined
-
   try {
-    const [logs, total] = await prisma.$transaction([
-      prisma.attendanceLog.findMany({
-        where,
-        orderBy: { timestamp: 'desc' },
-        skip: offset,
-        take: limit,
+    const studentWhere = search
+      ? { OR: [{ firstName: { contains: search, mode: 'insensitive' as const } }, { lastName: { contains: search, mode: 'insensitive' as const } }] }
+      : undefined
+    const [gateLogs, roomLogs] = await prisma.$transaction([
+      prisma.gateLog.findMany({
+        where: { student: studentWhere },
+        orderBy: { updatedAt: 'desc' },
         select: {
           id: true,
-          timestamp: true,
-          status: true,
+          updatedAt: true,
+          state: true,
+          inStatus: true,
           student: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
-      prisma.attendanceLog.count({ where }),
+      prisma.roomLog.findMany({
+        where: { student: studentWhere },
+        orderBy: { presentAt: 'desc' },
+        select: {
+          id: true,
+          presentAt: true,
+          subject: true,
+          className: true,
+          roomId: true,
+          period: true,
+          student: { select: { id: true, firstName: true, lastName: true } },
+        },
+      }),
     ])
+    const logs = [
+      ...gateLogs.map((log) => ({ id: `gate-${log.id}`, timestamp: log.updatedAt, status: log.state === 'IN' ? log.inStatus : 'OUT', type: 'GATE', context: null, student: log.student })),
+      ...roomLogs.map((log) => ({ id: `room-${log.id}`, timestamp: log.presentAt, status: 'PRESENT', type: 'ROOM', context: { subject: log.subject, className: log.className, roomId: log.roomId, period: log.period }, student: log.student })),
+    ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    const total = logs.length
 
-    res.json({ logs, total, studentDataAvailable: true })
+    res.json({ logs: logs.slice(offset, offset + limit), total, studentDataAvailable: true })
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
       res.json({ logs: null, total: null, studentDataAvailable: false })
       return
     }
     throw error
+  }
+}
+
+const READER_TYPES = ['GATE', 'ROOM'] as const
+type ReaderType = (typeof READER_TYPES)[number]
+
+const isClock = (value: unknown): value is string => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+
+export const getReaders = async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return
+  const readers = await prisma.reader.findMany({
+    orderBy: [{ active: 'desc' }, { name: 'asc' }],
+    select: {
+      id: true, name: true, type: true, active: true, createdAt: true, updatedAt: true,
+      teachers: { select: { user: { select: { id: true, username: true } } } },
+    },
+  })
+  res.json({ readers })
+}
+
+export const createReader = async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : ''
+  const type = req.body?.type as ReaderType
+  if (!name || !READER_TYPES.includes(type)) {
+    res.status(400).json({ message: 'Reader name and type GATE or ROOM are required' })
+    return
+  }
+  const deviceToken = crypto.randomBytes(24).toString('hex')
+  const reader = await prisma.reader.create({
+    data: { name, type, deviceToken },
+    select: { id: true, name: true, type: true, active: true, deviceToken: true },
+  })
+  res.status(201).json({ reader })
+}
+
+export const updateReader = async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return
+  const readerId = typeof req.params['readerId'] === 'string' ? req.params['readerId'] : ''
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : undefined
+  const active = typeof req.body?.active === 'boolean' ? req.body.active : undefined
+  const teacherIds: number[] | undefined = Array.isArray(req.body?.teacherIds) ? req.body.teacherIds.map((value: unknown) => Number(value)) : undefined
+  if (!readerId || (name !== undefined && !name)) {
+    res.status(400).json({ message: 'Invalid reader update' })
+    return
+  }
+  try {
+    const reader = await prisma.reader.findUnique({ where: { id: readerId }, select: { id: true, type: true } })
+    if (!reader) {
+      res.status(404).json({ message: 'Reader not found' })
+      return
+    }
+    if (reader.type === 'GATE' && teacherIds && teacherIds.length > 0) {
+      res.status(400).json({ message: 'Gate readers cannot be assigned to teachers' })
+      return
+    }
+    if (reader.type === 'ROOM' && teacherIds && teacherIds.some((id) => !Number.isInteger(id))) {
+      res.status(400).json({ message: 'Teacher IDs must be integers' })
+      return
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.reader.update({ where: { id: readerId }, data: { ...(name !== undefined ? { name } : {}), ...(active !== undefined ? { active } : {}) } })
+      if (teacherIds) {
+        await tx.readerTeacher.deleteMany({ where: { readerId } })
+        if (teacherIds.length > 0) await tx.readerTeacher.createMany({ data: [...new Set(teacherIds)].map((userId) => ({ readerId, userId })) })
+      }
+    })
+    res.json({ success: true })
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      res.status(400).json({ message: 'One or more teacher accounts do not exist' })
+      return
+    }
+    res.status(500).json({ message: 'Internal error' })
+  }
+}
+
+export const getSchoolSettings = async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return
+  const settings = await prisma.schoolSettings.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } })
+  res.json({ settings })
+}
+
+export const updateSchoolSettings = async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return
+  const lateCutoff = req.body?.lateCutoff
+  const timezone = req.body?.timezone
+  if (!isClock(lateCutoff) || (timezone !== undefined && (typeof timezone !== 'string' || !timezone.trim()))) {
+    res.status(400).json({ message: 'lateCutoff must use HH:MM format' })
+    return
+  }
+  try {
+    const settings = await prisma.schoolSettings.upsert({
+      where: { id: 1 },
+      update: { lateCutoff, ...(timezone !== undefined ? { timezone: timezone.trim() } : {}) },
+      create: { id: 1, lateCutoff, ...(timezone !== undefined ? { timezone: timezone.trim() } : {}) },
+    })
+    res.json({ settings })
+  } catch {
+    res.status(400).json({ message: 'Invalid timezone' })
   }
 }

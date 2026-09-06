@@ -13,13 +13,14 @@ datasource db {
 }
 
 model User {
-  id              Int             @id   @default(autoincrement())
-  username        String          @unique
-  password        String
-  role            String          @default("USER")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  scheduleEntries ScheduleEntry[]
+  id                Int             @id   @default(autoincrement())
+  username          String          @unique
+  password          String
+  role              String          @default("USER")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  scheduleEntries   ScheduleEntry[]
+  readerAssignments ReaderTeacher[]
 }
 
 model ScheduleEntry {
@@ -42,19 +43,91 @@ model ScheduleEntry {
 }
 
 model Student {
-  id          String          @id @default(uuid())
-  firstName   String
-  lastName    String
-  uid_card    String          @unique @default(uuid())
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  logs        AttendanceLog[]
+  id        String    @id @default(uuid())
+  studentId String?   @unique
+  firstName String
+  lastName  String
+  uid_card  String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  gateLogs  GateLog[]
+  roomLogs  RoomLog[]
 }
 
-model AttendanceLog {
+/// A physical NFC reader. `type` is "GATE" (daily IN/OUT + lateness) or
+/// "ROOM" (per-period class presence). Room readers are assigned to one or
+/// more teacher accounts; gate readers are not.
+model Reader {
+  id          String          @id @default(uuid())
+  name        String
+  type        String          @default("GATE")
+  deviceToken String          @unique
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  teachers    ReaderTeacher[]
+  gateLogs    GateLog[]
+  roomLogs    RoomLog[]
+}
+
+/// Join table: a room reader can serve multiple teachers.
+model ReaderTeacher {
+  readerId  String
+  userId    Int
+  createdAt DateTime @default(now())
+
+  reader Reader @relation(fields: [readerId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([readerId, userId])
+}
+
+/// Singleton (id = 1) holding school-wide attendance settings.
+model SchoolSettings {
+  id         Int      @id @default(1)
+  lateCutoff String   @default("08:00")
+  timezone   String   @default("Asia/Bangkok")
+  updatedAt  DateTime @updatedAt
+}
+
+/// One row per student per school day. `state` toggles IN/OUT on each gate
+/// tap; `inStatus` records whether the latest IN was on time or late.
+model GateLog {
+  id        String    @id @default(uuid())
+  studentId String
+  readerId  String
+  date      DateTime
+  state     String
+  inStatus  String
+  inAt      DateTime
+  outAt     DateTime?
+  firstInAt DateTime
+  updatedAt DateTime  @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reader  Reader  @relation(fields: [readerId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([date])
+}
+
+/// One row per student per class slot (room + subject + period + day).
+/// Idempotent: re-tapping the same slot does not create a new row.
+model RoomLog {
   id        String   @id @default(uuid())
   studentId String
-  timestamp DateTime @default(now())
-  status    String
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  readerId  String
+  date      DateTime
+  weekday   Int
+  period    Int
+  subject   String
+  className String
+  roomId    String
+  presentAt DateTime
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reader  Reader  @relation(fields: [readerId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, roomId, subject, period, date])
+  @@index([date])
 }

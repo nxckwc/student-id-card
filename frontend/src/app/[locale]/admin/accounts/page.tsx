@@ -44,10 +44,14 @@ const AccountsPage = () => {
     mutationFn: ({ id, role }: { id: number; role: 'USER' | 'ADMIN' }) => changeAccountRole(id, role),
     onSuccess: (_account, { id }) => {
       const target = accountsQuery.data?.find((account) => account.id === id)
+      setConfirm(null)
       setFeedback({ kind: 'success', message: t('roleUpdated', { username: target?.username ?? '' }) })
       invalidateAccounts()
     },
-    onError: (error) => setFeedback({ kind: 'error', message: getApiErrorMessage(error) ?? t('loadError') }),
+    onError: (error) => {
+      setConfirm(null)
+      setFeedback({ kind: 'error', message: getApiErrorMessage(error) ?? t('loadError') })
+    },
   })
 
   const deleteMutation = useMutation({

@@ -83,7 +83,8 @@ const ActivityPage = () => {
                       <span className="block truncate font-bold">{log.student.firstName} {log.student.lastName}</span>
                       <span className="flex items-center gap-1 text-xs text-[#748078]">
                         <Activity className="size-3" />
-                        {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestamp))}
+                        {log.type} · {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestamp))}
+                        {log.context ? ` · ${log.context.subject} · ${log.context.roomId} · P${log.context.period}` : ''}
                       </span>
                     </span>
                     <span className="rounded-md bg-[#edf3ef] px-2 py-1 text-xs font-bold text-[#52675c]">{log.status || '—'}</span>

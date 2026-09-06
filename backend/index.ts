@@ -4,9 +4,10 @@ import swaggerJsdoc from 'swagger-jsdoc'
 import cors from 'cors'
 import { login, logout, register, session } from './src/controllers/auth.js'
 import 'dotenv/config'
-import { createStudent, getStudent, getStudentByCard } from './src/controllers/student.js'
+import { createStudent, getStudent, getStudentByCard, registerCard } from './src/controllers/student.js'
 import { getSchedule } from './src/controllers/schedule.js'
-import { deleteAccount, getAccount, getAccounts, getAdminOverview, getAttendance, getStudents, replaceAccountSchedule, updateAccountRole } from './src/controllers/admin.js'
+import { createReader, deleteAccount, getAccount, getAccounts, getAdminOverview, getAttendance, getReaders, getSchoolSettings, getStudents, replaceAccountSchedule, updateAccountRole, updateReader, updateSchoolSettings } from './src/controllers/admin.js'
+import { lookupCard, scanReader } from './src/controllers/reader.js'
 
 const app = express()
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3100
@@ -24,6 +25,15 @@ const swaggerOptions: swaggerJsdoc.Options = {
         servers: [
             { url: `http://localhost:${port}` }
         ],
+        components: {
+            securitySchemes: {
+                deviceToken: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'X-Device-Token'
+                }
+            }
+        },
     },
     apis: ['./*.ts', './src/controllers/*.ts']
 }
@@ -65,8 +75,16 @@ app.patch('/admin/accounts/:accountId/role', updateAccountRole)
 app.delete('/admin/accounts/:accountId', deleteAccount)
 app.get('/admin/students', getStudents)
 app.get('/admin/attendance', getAttendance)
+app.get('/admin/readers', getReaders)
+app.post('/admin/readers', createReader)
+app.patch('/admin/readers/:readerId', updateReader)
+app.get('/admin/settings', getSchoolSettings)
+app.put('/admin/settings', updateSchoolSettings)
+app.post('/admin/reader/scan', scanReader)
+app.get('/admin/reader/lookup', lookupCard)
 
 app.post('/student', createStudent)
+app.post('/card/register', registerCard)
 app.get('/student/card/:studentCardId', getStudentByCard)
 app.get('/student/:studentId', getStudent)
 

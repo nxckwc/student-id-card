@@ -16,6 +16,7 @@ const StudentsPage = () => {
   const [search, setSearch] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [studentId, setStudentId] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string; card?: string } | null>(null)
 
@@ -34,20 +35,22 @@ const StudentsPage = () => {
   const students = studentsQuery.data?.studentDataAvailable ? studentsQuery.data.students ?? [] : null
 
   const addMutation = useMutation({
-    mutationFn: () => createStudent(firstName.trim(), lastName.trim()),
+    mutationFn: () => createStudent(firstName.trim(), lastName.trim(), studentId.trim()),
     onSuccess: (student) => {
       setFirstName('')
       setLastName('')
-      setFeedback({ kind: 'success', message: t('addStudentSuccess', { name: `${student.firstName} ${student.lastName}`, card: student.uid_card }) })
+      setStudentId('')
+      setFeedback({ kind: 'success', message: t('addStudentSuccess', { name: `${student.firstName} ${student.lastName}`, studentId: student.studentId ?? '' }) })
       void queryClient.invalidateQueries({ queryKey: ['admin', 'students'] })
       void queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
     },
     onError: (error) => setFeedback({ kind: 'error', message: getApiErrorMessage(error) ?? t('loadError') }),
   })
 
-  const canAdd = firstName.trim().length > 0 && lastName.trim().length > 0
+  const canAdd = firstName.trim().length > 0 && lastName.trim().length > 0 && /^\d+$/.test(studentId.trim())
 
-  const copyCard = async (studentId: string, uidCard: string) => {
+  const copyCard = async (studentId: string, uidCard: string | null) => {
+    if (!uidCard) return
     try {
       await navigator.clipboard.writeText(uidCard)
       setCopiedId(studentId)
@@ -93,6 +96,17 @@ const StudentsPage = () => {
               {t('addStudent')}
             </h2>
             <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={studentId}
+                onChange={(event) => setStudentId(event.target.value.replace(/[^0-9]/g, ''))}
+                placeholder={t('studentId')}
+                aria-label={t('studentId')}
+                required
+                className="flex-1 rounded border border-[#dce5de] px-3 py-2 text-sm outline-none focus:border-[#3f7565]"
+              />
               <input
                 type="text"
                 value={firstName}
@@ -153,6 +167,7 @@ const StudentsPage = () => {
                 <thead>
                   <tr className="border-b border-[#e8eee9] text-xs uppercase text-[#9aa89f]">
                     <th scope="col" className="px-4 py-3 font-bold">{t('student')}</th>
+                    <th scope="col" className="px-4 py-3 font-bold">{t('studentId')}</th>
                     <th scope="col" className="px-4 py-3 font-bold">{t('cardUid')}</th>
                     <th scope="col" className="px-4 py-3 font-bold">{t('checkIns')}</th>
                     <th scope="col" className="px-4 py-3 font-bold">{t('added')}</th>
@@ -169,18 +184,23 @@ const StudentsPage = () => {
                           <span className="font-bold">{student.firstName} {student.lastName}</span>
                         </div>
                       </td>
+                      <td className="px-4 py-3 tabular-nums text-[#526159]">{student.studentId ?? '—'}</td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => void copyCard(student.id, student.uid_card)}
-                          title={t('copyCardId')}
-                          className="flex items-center gap-2 rounded font-mono text-xs text-[#526159] transition hover:bg-[#edf3ef]"
-                        >
-                          <span className="truncate">{student.uid_card}</span>
-                          {copiedId === student.id ? <Check className="size-3.5 shrink-0 text-[#356b5c]" /> : <Copy className="size-3.5 shrink-0 text-[#9aa89f]" />}
-                        </button>
+                        {student.uid_card ? (
+                          <button
+                            type="button"
+                            onClick={() => void copyCard(student.id, student.uid_card)}
+                            title={t('copyCardId')}
+                            className="flex items-center gap-2 rounded font-mono text-xs text-[#526159] transition hover:bg-[#edf3ef]"
+                          >
+                            <span className="truncate">{student.uid_card}</span>
+                            {copiedId === student.id ? <Check className="size-3.5 shrink-0 text-[#356b5c]" /> : <Copy className="size-3.5 shrink-0 text-[#9aa89f]" />}
+                          </button>
+                        ) : (
+                          <span className="rounded-full bg-[#f1f4f2] px-2.5 py-1 text-xs font-semibold text-[#9aa89f]">{t('cardNotRegistered')}</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3 tabular-nums text-[#69766e]">{student._count.logs}</td>
+                      <td className="px-4 py-3 tabular-nums text-[#69766e]">{student._count.gateLogs + student._count.roomLogs}</td>
                       <td className="px-4 py-3 text-[#69766e]">
                         {new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(student.createdAt))}
                       </td>
