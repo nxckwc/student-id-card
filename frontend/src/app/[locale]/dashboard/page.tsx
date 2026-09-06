@@ -30,26 +30,27 @@ interface ScheduleEntry {
 }
 
 interface SessionResponse {
-  user: { username: string }
+  user: { username: string; role: string }
 }
 
-const getDashboardData = async (): Promise<{ schedule: ScheduleEntry[]; username: string }> => {
-  const [scheduleResponse, sessionResponse] = await Promise.all([
-    axios.get<{ schedule: ScheduleEntry[] }>(`${API_BASE_URL}/dashboard/schedule`, { withCredentials: true }),
-    axios.get<SessionResponse>(`${API_BASE_URL}/auth/session`, { withCredentials: true }),
-  ])
+const getDashboardData = async (): Promise<{ schedule: ScheduleEntry[]; username: string; role: string }> => {
+  const sessionResponse = await axios.get<SessionResponse>(`${API_BASE_URL}/auth/session`, { withCredentials: true })
+  const scheduleResponse = sessionResponse.data.user.role === 'USER'
+    ? { data: { schedule: [] } }
+    : await axios.get<{ schedule: ScheduleEntry[] }>(`${API_BASE_URL}/dashboard/schedule`, { withCredentials: true })
 
   return {
     schedule: scheduleResponse.data.schedule,
     username: sessionResponse.data.user.username,
+    role: sessionResponse.data.user.role,
   }
 }
 
 const reportScopes = [
-  { id: 'arrival', icon: <DoorArrowLeft24Regular className="size-5" />, color: 'bg-[#f9e8e4] text-[#a95047]' },
-  { id: 'student', icon: <PersonAccounts24Regular className="size-5" />, color: 'bg-[#deece4] text-[#356b5c]' },
-  { id: 'class', icon: <DataHistogram24Regular className="size-5" />, color: 'bg-[#e0ecf3] text-[#426778]' },
-  { id: 'subject', icon: <BookOpen24Regular className="size-5" />, color: 'bg-[#f4edcf] text-[#7a682d]' },
+  { id: 'arrival', icon: <DoorArrowLeft24Regular className="size-5" />, color: 'bg-danger-soft text-danger-foreground' },
+  { id: 'student', icon: <PersonAccounts24Regular className="size-5" />, color: 'bg-accent-soft text-accent-foreground' },
+  { id: 'class', icon: <DataHistogram24Regular className="size-5" />, color: 'bg-info-soft text-info' },
+  { id: 'subject', icon: <BookOpen24Regular className="size-5" />, color: 'bg-warning-soft text-warning-foreground' },
 ]
 
 const currentWeekday = (): number => {
@@ -71,6 +72,7 @@ function DashboardContent() {
   const { data, error, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-schedule'],
     queryFn: getDashboardData,
+    refetchInterval: 5000,
   })
 
   const selectedLessons = (data?.schedule ?? []).filter((entry) => entry.weekday === selectedDay)
@@ -89,41 +91,53 @@ function DashboardContent() {
     && currentMinutes < toMinutes(lesson.endTime)
   )
 
+  if (data?.role === 'USER') {
+    return (
+      <main className="relative min-h-screen bg-background px-4 pb-14 pt-24 text-text-primary sm:px-6 lg:px-8">
+        <div className="relative mx-auto flex min-h-[calc(100vh-8rem)] max-w-7xl items-center justify-center">
+          <section className="w-full max-w-2xl rounded-lg border border-border bg-surface/85 p-10 text-center shadow-[0_10px_28px_rgba(52,92,70,0.08)]">
+            <h1 className="text-3xl font-bold text-text-primary">hello this what student see</h1>
+          </section>
+        </div>
+      </main>
+    )
+  }
+
   return (
-    <main className="relative min-h-screen bg-[#f4f7f3] px-4 pb-14 pt-24 text-[#26332e] sm:px-6 lg:px-8">
+    <main className="relative min-h-screen bg-background px-4 pb-14 pt-24 text-text-primary sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(112,139,122,0.16)_1px,transparent_1px)] bg-size-[24px_24px]" />
       <div className="relative mx-auto max-w-7xl">
-        <section className="mb-10 flex flex-col gap-5 border-b border-[#dce5de] pb-8 sm:flex-row sm:items-end sm:justify-between" aria-labelledby="dashboard-title">
+        <section className="mb-10 flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between" aria-labelledby="dashboard-title">
           <div className="flex items-center gap-3">
-            <div className="relative flex size-12 shrink-0 items-center justify-center rounded-lg bg-[#deece4] text-[#356b5c]">
+            <div className="relative flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-foreground">
               <PersonAccounts24Filled className="size-6" />
-              <span className="absolute -right-1 -top-1 size-3 rotate-12 rounded-sm bg-[#e47769]" />
+              <span className="absolute -right-1 -top-1 size-3 rotate-12 rounded-sm bg-danger-accent" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#748078]">{t('workspace')}</p>
-              <h1 id="dashboard-title" className="text-2xl font-bold text-[#26332e]">{t('welcome', { username: data?.username ?? 'Admin' })}</h1>
+              <p className="text-xs font-semibold text-text-muted">{t('workspace')}</p>
+              <h1 id="dashboard-title" className="text-2xl font-bold text-text-primary">{t('welcome', { username: data?.username ?? 'Admin' })}</h1>
             </div>
           </div>
-          <p className="text-sm font-medium text-[#748078]">{t('today', { date: dateLabel })}</p>
+          <p className="text-sm font-medium text-text-muted">{t('today', { date: dateLabel })}</p>
         </section>
 
         <section id="schedule" className="scroll-mt-24" aria-labelledby="schedule-title">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-[#d05f54]"><CalendarDays className="size-4" /> {t('weeklySchedule')}</p>
-              <h2 id="schedule-title" className="text-2xl font-bold text-[#26332e]">{selectedDayLabel}</h2>
+              <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-danger-accent-soft"><CalendarDays className="size-4" /> {t('weeklySchedule')}</p>
+              <h2 id="schedule-title" className="text-2xl font-bold text-text-primary">{selectedDayLabel}</h2>
             </div>
-            <span className="text-sm text-[#748078]">{t('periodCount', { count: selectedLessons.length })}</span>
+            <span className="text-sm text-text-muted">{t('periodCount', { count: selectedLessons.length })}</span>
           </div>
 
-          <div className="mb-5 grid grid-cols-7 gap-1 rounded-lg border border-[#dce5de] bg-white/80 p-1 shadow-[0_4px_18px_rgba(52,76,61,0.04)]" role="tablist" aria-label={t('selectDay')}>
+          <div className="mb-5 grid grid-cols-7 gap-1 rounded-lg border border-border bg-surface/80 p-1 shadow-[0_4px_18px_rgba(52,76,61,0.04)]" role="tablist" aria-label={t('selectDay')}>
             {days.map((day) => (
               <button
                 key={day}
                 type="button"
                 role="tab"
                 aria-selected={selectedDay === day}
-                className={`min-w-0 rounded-md px-1 py-2.5 text-xs font-bold transition sm:px-3 sm:text-sm ${selectedDay === day ? 'bg-[#3f7565] text-white shadow-sm' : 'text-[#69766e] hover:bg-[#edf3ef]'}`}
+                className={`min-w-0 rounded-md px-1 py-2.5 text-xs font-bold transition sm:px-3 sm:text-sm ${selectedDay === day ? 'bg-accent text-white shadow-sm' : 'text-text-nav hover:bg-surface-chip'}`}
                 onClick={() => setSelectedDay(day)}
               >
                 {t(`days.${day}.short`)}
@@ -136,12 +150,12 @@ function DashboardContent() {
               {Array.from({ length: 7 }, (_, index) => <div key={index} className="skeleton h-48 w-72 shrink-0 snap-start rounded-lg" />)}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-start gap-3 rounded-lg border border-[#e8bcb6] bg-[#fff8f6] p-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="flex items-center gap-2 text-sm font-medium text-[#99483f]"><AlertCircle className="size-5" />{t('loadError')}</p>
-              <button type="button" className="inline-flex items-center gap-2 rounded-md bg-[#d8675c] px-3 py-2 text-sm font-semibold text-white hover:bg-[#b85349]" onClick={() => void refetch()}><RefreshCw className="size-4" />{t('retry')}</button>
+            <div className="flex flex-col items-start gap-3 rounded-lg border border-danger-border bg-danger-bg p-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-center gap-2 text-sm font-medium text-danger-foreground"><AlertCircle className="size-5" />{t('loadError')}</p>
+              <button type="button" className="inline-flex items-center gap-2 rounded-md bg-danger px-3 py-2 text-sm font-semibold text-white hover:bg-danger-hover" onClick={() => void refetch()}><RefreshCw className="size-4" />{t('retry')}</button>
             </div>
           ) : selectedLessons.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[#c8d5cc] bg-white/70 px-5 py-12 text-center text-sm text-[#748078]">{t('noPeriods', { day: selectedDayLabel })}</div>
+            <div className="rounded-lg border border-dashed border-border-dashed bg-surface/70 px-5 py-12 text-center text-sm text-text-muted">{t('noPeriods', { day: selectedDayLabel })}</div>
           ) : (
             <div className="schedule-rail flex snap-x gap-3 overflow-x-auto pb-4" aria-label={`${selectedDayLabel} ${t('weeklySchedule')}`}>
               {selectedLessons.map((lesson) => {
@@ -156,20 +170,20 @@ function DashboardContent() {
                   aria-pressed={isSelected}
                   aria-label={`Period ${lesson.period}: ${lesson.subject}, ${isCurrent ? t('inProgress') : t('unavailable')}`}
                   onClick={() => setSelectedLessonId(lesson.id)}
-                  className={`relative flex min-h-52 w-72 shrink-0 snap-start flex-col overflow-hidden rounded-lg border p-5 text-left transition ${isCurrent ? `border-[#8db7a2] bg-white shadow-[0_10px_28px_rgba(52,92,70,0.1)] ${isSelected ? 'ring-2 ring-[#3f7565] ring-offset-2 ring-offset-[#f4f7f3]' : 'hover:border-[#5f927e]'}` : 'cursor-not-allowed border-[#dce5de] bg-[#e9eeea] opacity-60 grayscale'}`}
+                  className={`relative flex min-h-52 w-72 shrink-0 snap-start flex-col overflow-hidden rounded-lg border p-5 text-left transition ${isCurrent ? `border-accent-border bg-surface shadow-[0_10px_28px_rgba(52,92,70,0.1)] ${isSelected ? 'ring-2 ring-accent ring-offset-2 ring-offset-background' : 'hover:border-accent-border-hover'}` : 'cursor-not-allowed border-border bg-surface-muted opacity-60 grayscale'}`}
                 >
-                  <span className={`absolute inset-x-0 top-0 h-1 ${isCurrent ? 'bg-[#e47769]' : 'bg-[#bcc8c0]'}`} />
+                  <span className={`absolute inset-x-0 top-0 h-1 ${isCurrent ? 'bg-danger-accent' : 'bg-neutral'}`} />
                   <div className="flex items-start justify-between gap-3">
-                    <span className="rounded-md bg-[#edf3ef] px-2 py-1 text-xs font-bold text-[#52675c]">Period {lesson.period}</span>
-                    <span className="flex shrink-0 items-center gap-1 text-xs tabular-nums text-[#748078]"><Clock3 className="size-3.5" />{lesson.startTime} - {lesson.endTime}</span>
+                    <span className="rounded-md bg-surface-chip px-2 py-1 text-xs font-bold text-text-secondary">Period {lesson.period}</span>
+                    <span className="flex shrink-0 items-center gap-1 text-xs tabular-nums text-text-muted"><Clock3 className="size-3.5" />{lesson.startTime} - {lesson.endTime}</span>
                   </div>
                   <div className="mt-7">
-                    <h3 className="text-xl font-bold text-[#26332e]">{lesson.subject}</h3>
-                    <p className="mt-1 text-sm text-[#69766e]">{t('class', { name: lesson.className })}</p>
+                    <h3 className="text-xl font-bold text-text-primary">{lesson.subject}</h3>
+                    <p className="mt-1 text-sm text-text-nav">{t('class', { name: lesson.className })}</p>
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-6">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-[#527263]"><MapPin className="size-3.5" />{t('room', { id: lesson.roomId })}</p>
-                    {isCurrent && <span className="rounded-md bg-[#e47769] px-2 py-1 text-xs font-bold text-white">{t('current')}</span>}
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary"><MapPin className="size-3.5" />{t('room', { id: lesson.roomId })}</p>
+                    {isCurrent && <span className="rounded-md bg-danger-accent px-2 py-1 text-xs font-bold text-white">{t('current')}</span>}
                   </div>
                 </button>
                 )
@@ -180,18 +194,18 @@ function DashboardContent() {
 
         <section id="reports" className="mt-12 scroll-mt-24" aria-labelledby="reports-title">
           <div className="mb-4">
-            <p className="mb-1 text-xs font-bold uppercase text-[#d05f54]">{t('insights')}</p>
-            <h2 id="reports-title" className="text-2xl font-bold text-[#26332e]">{t('reports')}</h2>
+            <p className="mb-1 text-xs font-bold uppercase text-danger-accent-soft">{t('insights')}</p>
+            <h2 id="reports-title" className="text-2xl font-bold text-text-primary">{t('reports')}</h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {reportScopes.map((scope) => (
-              <button key={scope.id} className="group flex w-full items-center gap-4 rounded-lg border border-[#dce5de] bg-white/85 p-4 text-left transition hover:-translate-y-0.5 hover:border-[#b9cbc0] hover:shadow-[0_10px_24px_rgba(52,76,61,0.07)]" onClick={() => console.log('selected scope:', scope.id)}>
+              <button key={scope.id} className="group flex w-full items-center gap-4 rounded-lg border border-border bg-surface/85 p-4 text-left transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[0_10px_24px_rgba(52,76,61,0.07)]" onClick={() => console.log('selected scope:', scope.id)}>
                 <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${scope.color}`}>{scope.icon}</div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-bold text-[#314038]">{t(`reportItems.${scope.id}.label`)}</h3>
-                  <p className="mt-0.5 text-xs text-[#748078]">{t(`reportItems.${scope.id}.description`)}</p>
+                  <h3 className="text-sm font-bold text-text-primary">{t(`reportItems.${scope.id}.label`)}</h3>
+                  <p className="mt-0.5 text-xs text-text-muted">{t(`reportItems.${scope.id}.description`)}</p>
                 </div>
-                <ChevronRight20Regular className="size-4 shrink-0 text-[#9aa89f] transition group-hover:translate-x-0.5 group-hover:text-[#d05f54]" />
+                <ChevronRight20Regular className="size-4 shrink-0 text-text-faint transition group-hover:translate-x-0.5 group-hover:text-danger-accent-soft" />
               </button>
             ))}
           </div>

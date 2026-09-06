@@ -308,7 +308,7 @@ export const replaceAccountSchedule = async (req: Request, res: Response): Promi
   res.json({ success: true, schedule: scheduleData })
 }
 
-const ACCOUNT_ROLES = ['USER', 'ADMIN'] as const
+const ACCOUNT_ROLES = ['USER', 'TEACHER', 'ADMIN'] as const
 type AccountRole = (typeof ACCOUNT_ROLES)[number]
 
 /**
@@ -334,7 +334,7 @@ type AccountRole = (typeof ACCOUNT_ROLES)[number]
  *             properties:
  *               role:
  *                 type: string
- *                 enum: [USER, ADMIN]
+ *                 enum: [USER, TEACHER, ADMIN]
  *     responses:
  *       200:
  *         description: Role updated

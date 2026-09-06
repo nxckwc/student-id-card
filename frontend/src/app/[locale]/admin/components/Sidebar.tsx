@@ -65,15 +65,15 @@ const AdminNav = ({ variant, username }: { variant: 'sidebar' | 'mobile'; userna
   const linkClass = (active: boolean) =>
     `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
       active
-        ? 'bg-[#e7f0eb] font-bold text-[#356b5c]'
-        : 'font-medium text-[#68756d] hover:bg-[#edf2ee] hover:text-[#356b5c]'
+        ? 'bg-surface-active font-bold text-accent-foreground'
+        : 'font-medium text-text-nav hover:bg-surface-hover hover:text-accent-foreground'
     }`
 
   if (variant === 'mobile') {
     return (
-      <nav className="mb-6 flex gap-1 overflow-x-auto rounded-lg border border-[#dce5de] bg-white/85 p-1" aria-label={t('nav.overview')}>
+      <nav className="mb-6 flex gap-1 overflow-x-auto rounded-lg border border-border bg-surface/85 p-1" aria-label={t('nav.overview')}>
         {items.map((item) => (
-          <Link key={item.href} href={item.href} className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-bold sm:text-sm ${item.isActive(pathname) ? 'bg-[#3f7565] text-white' : 'text-[#69766e] hover:bg-[#edf3ef]'}`}>
+          <Link key={item.href} href={item.href} className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-bold sm:text-sm ${item.isActive(pathname) ? 'bg-accent text-white' : 'text-text-nav hover:bg-surface-chip'}`}>
             {item.icon}
             {item.label}
           </Link>
@@ -97,7 +97,7 @@ const AdminNav = ({ variant, username }: { variant: 'sidebar' | 'mobile'; userna
 }
 
 export const AdminSidebar = ({ username }: { username?: string }) => (
-  <aside className="hidden w-60 shrink-0 border-r border-[#dce5de] bg-white/50 lg:block">
+  <aside className="hidden w-60 shrink-0 border-r border-border bg-surface/50 lg:block">
     <div className="sticky top-16 flex min-h-[calc(100vh-4rem)] flex-col pt-5">
       <AdminNav variant="sidebar" username={username} />
     </div>

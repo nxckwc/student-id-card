@@ -97,6 +97,11 @@
     "noAccounts": "No accounts yet.",
     "noAccountsFound": "No accounts match your search.",
     "periods": "periods",
+    "roleNames": {
+      "USER": "Change to teacher",
+      "TEACHER": "Promote to admin",
+      "ADMIN": "Demote to user"
+    },
     "promote": "Promote to admin",
     "demote": "Demote to user",
     "deleteAccount": "Delete account",

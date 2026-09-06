@@ -133,7 +133,7 @@ export const saveAccountSchedule = async (id: number, entries: ScheduleEntry[]):
   return data.schedule
 }
 
-export const changeAccountRole = async (id: number, role: 'USER' | 'ADMIN'): Promise<Account> => {
+export const changeAccountRole = async (id: number, role: 'USER' | 'TEACHER' | 'ADMIN'): Promise<Account> => {
   const { data } = await axios.patch<{ account: Account }>(`${API_BASE_URL}/admin/accounts/${id}/role`, { role }, { withCredentials: true })
   return data.account
 }

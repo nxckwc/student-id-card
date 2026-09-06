@@ -20,7 +20,7 @@ const AdminLayoutContent = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useQuery({ queryKey: ['admin', 'session'], queryFn: getSession })
 
   return (
-    <div className="relative min-h-screen bg-[#f4f7f3] pt-16 text-[#26332e]">
+    <div className="relative min-h-screen bg-background pt-16 text-text-primary">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle,rgba(112,139,122,0.16)_1px,transparent_1px)] bg-size-[24px_24px]" />
       <div className="relative flex">
         <AdminSidebar username={session?.user?.username} />

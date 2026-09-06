@@ -24,7 +24,7 @@ interface LoginFormProps {
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <div className="mb-2 text-sm font-semibold text-[#4c4947]">{label}</div>
+    <div className="mb-2 text-sm font-semibold text-text-secondary">{label}</div>
     {children}
   </div>
 );
@@ -53,7 +53,7 @@ const LoginForm = ({
       <Field label={t("username")}>
         <input
           autoComplete="username"
-          className="w-full rounded-xl border border-[#ded6d0] bg-white px-4 py-3 text-sm text-[#303536] outline-none transition placeholder:text-[#aaa19b] focus:border-[#c94f5f] focus:ring-3 focus:ring-[#f8e7e9]"
+          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-text-faint focus:border-danger focus:ring-3 focus:ring-danger-soft"
           disabled={isBusy}
           onChange={(e) => onUsernameChange(e.target.value)}
           placeholder={t("usernamePlaceholder")}
@@ -75,10 +75,10 @@ const LoginForm = ({
       </Field>
 
       {isLoginMode && (
-        <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-[#68625e]">
+        <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-text-muted">
           <input
             checked={rememberMe}
-            className="h-4 w-4 cursor-pointer rounded accent-[#c94f5f]"
+            className="h-4 w-4 cursor-pointer rounded accent-danger"
             disabled={isBusy}
             onChange={(e) => onRememberMeChange(e.target.checked)}
             type="checkbox"
@@ -88,20 +88,20 @@ const LoginForm = ({
       )}
 
       {noticeMessage && (
-        <div className="rounded-xl border border-[#bfd4c6] bg-[#dfeae3] px-4 py-3 text-sm text-[#466052]">
+        <div className="rounded-xl border border-accent-border bg-accent-soft px-4 py-3 text-sm text-accent-foreground">
           {noticeMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="rounded-xl border border-[#eccfd3] bg-[#f8e7e9] px-4 py-3 text-sm text-[#a93e4d]">
+        <div className="rounded-xl border border-danger-border bg-danger-soft px-4 py-3 text-sm text-danger-hover">
           {errorMessage}
         </div>
       )}
 
       <motion.button
         aria-busy={isBusy}
-        className="group relative flex w-full cursor-pointer select-none items-center justify-center gap-2 rounded-xl bg-[#c94f5f] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(169,62,77,0.18)] transition hover:bg-[#a93e4d] disabled:cursor-wait disabled:opacity-70"
+        className="group relative flex w-full cursor-pointer select-none items-center justify-center gap-2 rounded-xl bg-danger px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(169,62,77,0.18)] transition hover:bg-danger-hover disabled:cursor-wait disabled:opacity-70"
         disabled={isBusy}
         type="submit"
         whileHover={{ scale: 1.01 }}
@@ -117,10 +117,10 @@ const LoginForm = ({
         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
       </motion.button>
 
-      <div className="text-center text-sm text-[#817873]">
+      <div className="text-center text-sm text-text-faint">
         {isLoginMode ? t("signupPrompt") : t("signinPrompt")}{" "}
         <button
-          className="cursor-pointer font-semibold text-[#b54554] hover:text-[#923744]"
+          className="cursor-pointer font-semibold text-danger hover:text-danger-hover"
           disabled={isBusy}
           onClick={onToggleMode}
           type="button"

@@ -7,7 +7,7 @@ const SchoolHeader = () => {
 
   return (
     <div className="flex items-center gap-3 select-none">
-      <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-[#f8e7e9] p-1">
+      <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-danger-soft p-1">
         <Image
           alt="School logo"
           className="h-full w-full object-contain"
@@ -18,8 +18,8 @@ const SchoolHeader = () => {
       </div>
 
       <div>
-        <div className="text-base font-bold text-[#303536]">{ t("name") }</div>
-        <div className="mt-1 text-xs text-[#817873]">{ t("dashboard") }</div>
+        <div className="text-base font-bold text-text-primary">{ t("name") }</div>
+        <div className="mt-1 text-xs text-text-faint">{ t("dashboard") }</div>
       </div>
     </div>
   );
